@@ -12,12 +12,13 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { FlipType, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import * as ImageManipulator from 'expo-image-manipulator';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
-const FRAME_WIDTH = screenWidth * 0.80; 
-const FRAME_HEIGHT = FRAME_WIDTH * 1.58; // vertical ID proportion (approx: 85.6mm x 54mm flipped)
+const FRAME_WIDTH = screenWidth * 0.8;
+const FRAME_HEIGHT = FRAME_WIDTH * 1.58; // Vertical proportion with width
 
 export default function CameraScreen() {
   const cameraRef = useRef<CameraView>(null);
@@ -50,14 +51,26 @@ export default function CameraScreen() {
       height: FRAME_HEIGHT * scaleY,
     };
 
-    const cropped = await manipulateAsync(photo.uri, [{ crop: cropRegion }], {
-      compress: 1,
+    const context = ImageManipulator.ImageManipulator.manipulate(photo.uri);
+    context.crop(cropRegion);
+    const img = await context.renderAsync();
+    const result = await img.saveAsync({
       format: SaveFormat.JPEG,
     });
 
-    setCroppedUri(cropped.uri);
+    /*     
+     * manipulateAsync is deprecated
+      const cropped = await manipulateAsync(photo.uri, [{ crop: cropRegion }], {
+      compress: 1,
+      format: SaveFormat.JPEG,
+    }); */
+
+    setCroppedUri(result.uri);
     setShowPreview(true);
-    await MediaLibrary.saveToLibraryAsync(cropped.uri);
+    /**
+     * !NOTE: This save the photo in gallery
+     * await MediaLibrary.saveToLibraryAsync(result.uri);
+    */
   };
 
   if (!permission) return <Text>Requesting camera permission...</Text>;
@@ -65,19 +78,14 @@ export default function CameraScreen() {
     return (
       <View style={styles.container}>
         <Text>Necesitamos acceso a tu cámara</Text>
-        <Button onPress={requestPermission} title="Dar permiso" />
+        <Button onPress={requestPermission} title='Allow permissions' />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing="back"
-        ref={cameraRef}
-        onLayout={onCameraLayout}
-      >
+      <CameraView style={styles.camera} facing='back' ref={cameraRef} onLayout={onCameraLayout}>
         <View style={styles.overlay}>
           <Text style={styles.instruction}>Try to center the mail piece in the rectangle</Text>
           <View style={styles.frame} />
@@ -88,7 +96,7 @@ export default function CameraScreen() {
         <Text style={{ color: '#fff' }}>Tomar Foto</Text>
       </TouchableOpacity>
 
-      <Modal visible={showPreview} transparent animationType="fade">
+      <Modal visible={showPreview} transparent animationType='fade'>
         <View style={styles.modalContainer}>
           {croppedUri && (
             <Image
@@ -134,9 +142,9 @@ const styles = StyleSheet.create({
     width: FRAME_WIDTH,
     height: FRAME_HEIGHT,
     borderWidth: 3,
-    borderColor: 'cyan',
+    borderColor: 'white',
     backgroundColor: 'transparent',
-    borderRadius: 0, // 🔥 Sin bordes redondeados
+    borderRadius: 0,
   },
   captureButton: {
     position: 'absolute',
