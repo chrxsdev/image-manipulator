@@ -93,7 +93,7 @@ export default function CameraScreen() {
       </CameraView>
 
       <TouchableOpacity onPress={takePicture} style={styles.captureButton}>
-        <Text style={{ color: '#fff' }}>Tomar Foto</Text>
+        <Text style={{ color: '#fff' }}>Take Photo</Text>
       </TouchableOpacity>
 
       <Modal visible={showPreview} transparent animationType='fade'>
