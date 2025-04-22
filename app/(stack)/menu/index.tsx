@@ -14,6 +14,8 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SaveFormat } from 'expo-image-manipulator';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as MediaLibrary from 'expo-media-library';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -21,6 +23,7 @@ const FRAME_WIDTH = screenWidth * 0.8;
 const FRAME_HEIGHT = FRAME_WIDTH * 1.58; // Vertical proportion with width
 
 export default function CameraScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraLayout, setCameraLayout] = useState({ width: 0, height: 0 });
@@ -108,7 +111,7 @@ export default function CameraScreen() {
               resizeMode='contain'
             />
           )}
-          <TouchableOpacity onPress={() => setShowPreview(false)} style={styles.closeButton}>
+          <TouchableOpacity onPress={() => croppedUri && navigation.navigate('crop-editor/index', { photoUri: croppedUri })} style={styles.closeButton}>
             <Text style={{ color: '#fff' }}>Volver</Text>
           </TouchableOpacity>
         </View>
@@ -144,8 +147,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: 'white',
     backgroundColor: 'transparent',
-    borderRadius: 0,
-  },
+  },  
   captureButton: {
     position: 'absolute',
     bottom: 40,

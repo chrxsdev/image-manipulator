@@ -17,6 +17,12 @@ const StackLayout = () => {
           title: 'Menu',
         }}
       />
+      <Stack.Screen
+        name='crop-editor/index'
+        options={{
+          title: 'Crop Editor',
+        }}
+      />
     </Stack>
   );
 };
