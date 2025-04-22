@@ -11,9 +11,9 @@ import {
   Modal,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as MediaLibrary from 'expo-media-library';
-import { FlipType, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { SaveFormat } from 'expo-image-manipulator';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as MediaLibrary from 'expo-media-library';
 
 const { width: screenWidth } = Dimensions.get('window');
 
