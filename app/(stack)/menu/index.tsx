@@ -112,7 +112,7 @@ export default function CameraScreen() {
             }
             style={styles.closeButton}
           >
-            <Text style={{ color: '#fff' }}>Volver</Text>
+            <Text style={{ color: '#fff' }}>Edit</Text>
           </TouchableOpacity>
         </View>
       </Modal>

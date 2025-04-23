@@ -26,6 +26,7 @@ const EditScreen = () => {
   const [currentRect, setCurrentRect] = useState<Rect | null>(null);
   const [selectedRectIndex, setSelectedRectIndex] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isMovingRect, setIsMovingRect] = useState(false);
 
   const imageRef = useRef(null);
   const canvasRef = useCanvasRef();
@@ -51,57 +52,6 @@ const EditScreen = () => {
     }
   }, [imageUri]);
 
-  const startDrawing = (x: number, y: number) => {
-    if (!drawMode) return;
-
-    const newRect: Rect = {
-      id: Date.now().toString(),
-      x: x,
-      y: y,
-      width: 0,
-      height: 0,
-    };
-
-    setCurrentRect(newRect);
-  };
-
-  const updateDrawing = (x: number, y: number) => {
-    if (!drawMode || !currentRect) return;
-
-    setCurrentRect((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        width: x - prev.x,
-        height: y - prev.y,
-      };
-    });
-  };
-
-  const finishDrawing = () => {
-    if (!drawMode || !currentRect) return;
-
-    // Normalize rectangle coordinates (handle negative width/height)
-    const normalizedRect: Rect = {
-      ...currentRect,
-      x: currentRect.width < 0 ? currentRect.x + currentRect.width : currentRect.x,
-      y: currentRect.height < 0 ? currentRect.y + currentRect.height : currentRect.y,
-      width: Math.abs(currentRect.width),
-      height: Math.abs(currentRect.height),
-    };
-
-    // Only add if rectangle has meaningful size
-    if (normalizedRect.width > 10 && normalizedRect.height > 10) {
-      setRectangles((prev) => [...prev, normalizedRect]);
-    }
-
-    setCurrentRect(null);
-  };
-
-  const finishMoving = () => {
-    setSelectedRectIndex(null);
-  };
-
   // Check if a point is inside a rectangle
   const isPointInRect = (x: number, y: number, rect: Rect): boolean => {
     return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
@@ -117,54 +67,111 @@ const EditScreen = () => {
     return null;
   };
 
-  const startMoving = (x: number, y: number) => {
+  const startInteraction = (x: number, y: number) => {
+    if (!drawMode) return;
+
+    // First check if we're clicking on an existing rectangle
     const index = findSelectedRect(x, y);
+    
     if (index !== null) {
+      // We're clicking on an existing rectangle, start moving it
       setSelectedRectIndex(index);
+      setIsMovingRect(true);
       setDragOffset({
         x: x - rectangles[index].x,
         y: y - rectangles[index].y,
       });
+    } else {
+      // We're not clicking on a rectangle, start drawing a new one
+      const newRect: Rect = {
+        id: Date.now().toString(),
+        x: x,
+        y: y,
+        width: 0,
+        height: 0,
+      };
+      setCurrentRect(newRect);
+      setIsMovingRect(false);
     }
   };
 
-  const updateMoving = (x: number, y: number) => {
-    if (selectedRectIndex === null) return;
+  const updateInteraction = (x: number, y: number) => {
+    if (!drawMode) return;
 
-    setRectangles((prev) => {
-      const newRects = [...prev];
-      newRects[selectedRectIndex] = {
-        ...newRects[selectedRectIndex],
-        x: x - dragOffset.x,
-        y: y - dragOffset.y,
+    if (isMovingRect && selectedRectIndex !== null) {
+      // Update the position of the selected rectangle
+      setRectangles((prev) => {
+        const newRects = [...prev];
+        newRects[selectedRectIndex] = {
+          ...newRects[selectedRectIndex],
+          x: x - dragOffset.x,
+          y: y - dragOffset.y,
+        };
+        return newRects;
+      });
+    } else if (currentRect) {
+      // Update the size of the rectangle being drawn
+      setCurrentRect((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          width: x - prev.x,
+          height: y - prev.y,
+        };
+      });
+    }
+  };
+
+  const finishInteraction = () => {
+    if (!drawMode) return;
+
+    if (isMovingRect) {
+      // Finish moving the rectangle
+      setIsMovingRect(false);
+      setSelectedRectIndex(null);
+    } else if (currentRect) {
+      // Finish drawing the new rectangle
+      // Normalize rectangle coordinates (handle negative width/height)
+      const normalizedRect: Rect = {
+        ...currentRect,
+        x: currentRect.width < 0 ? currentRect.x + currentRect.width : currentRect.x,
+        y: currentRect.height < 0 ? currentRect.y + currentRect.height : currentRect.y,
+        width: Math.abs(currentRect.width),
+        height: Math.abs(currentRect.height),
       };
-      return newRects;
-    });
+
+      // Only add if rectangle has meaningful size
+      if (normalizedRect.width > 10 && normalizedRect.height > 10) {
+        setRectangles((prev) => [...prev, normalizedRect]);
+      }
+
+      setCurrentRect(null);
+    }
   };
 
   // Replace useAnimatedGestureHandler with Gesture.Pan()
   const panGesture = Gesture.Pan()
     .onStart((event) => {
       if (drawMode) {
-        runOnJS(startDrawing)(event.x, event.y);
-        runOnJS(startMoving)(event.x, event.y);
+        runOnJS(startInteraction)(event.x, event.y);
       }
     })
     .onUpdate((event) => {
       if (drawMode) {
-        runOnJS(updateDrawing)(event.x, event.y);
-        runOnJS(updateMoving)(event.x, event.y);
+        runOnJS(updateInteraction)(event.x, event.y);
       }
     })
     .onEnd(() => {
       if (drawMode) {
-        runOnJS(finishDrawing)();
-        runOnJS(finishMoving)();
+        runOnJS(finishInteraction)();
       }
     });
 
   const toggleDrawMode = () => {
     setDrawMode(!drawMode);
+    setCurrentRect(null);
+    setSelectedRectIndex(null);
+    setIsMovingRect(false);
   };
 
   const handleUndo = () => {
@@ -208,7 +215,7 @@ const EditScreen = () => {
             top: rect.y,
             width: rect.width,
             height: rect.height,
-            borderColor: '#ffffff',
+            borderColor: selectedRectIndex === index ? '#ffcc00' : '#ffffff',
             borderWidth: selectedRectIndex === index ? 2 : 1,
           },
         ]}
@@ -259,8 +266,10 @@ const EditScreen = () => {
       <View style={styles.instructions}>
         <Text style={styles.instructionText}>
           {drawMode
-            ? 'Tap and drag to draw black rectangle to hide information'
-            : "Select 'Draw' to begin"}
+            ? isMovingRect 
+              ? 'Moving rectangle...' 
+              : 'Tap and drag to draw black rectangle or tap on existing rectangle to move it'
+            : "Select 'Hide PII' to begin"}
         </Text>
       </View>
     </GestureHandlerRootView>
