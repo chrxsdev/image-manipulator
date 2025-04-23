@@ -23,6 +23,12 @@ const StackLayout = () => {
           title: 'Crop Editor',
         }}
       />
+      <Stack.Screen
+        name='redacting/index'
+        options={{
+          title: 'Redacting',
+        }}
+      />
     </Stack>
   );
 };
