@@ -30,9 +30,9 @@ const StackLayout = () => {
         }}
       />
       <Stack.Screen
-        name='redacting/index'
+        name='native/index'
         options={{
-          title: 'Redacting',
+          title: 'Native',
         }}
       />
     </Stack>

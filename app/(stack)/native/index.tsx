@@ -4,7 +4,7 @@ import { View, Text, Pressable, Image } from 'react-native';
 
 import * as ImagePicker from 'expo-image-picker';
 
-const MenuScreen = () => {
+const NativeScreen = () => {
   const [image, setImage] = useState<string | null>(null);
 
   const takePicture = async () => {
@@ -38,4 +38,4 @@ const MenuScreen = () => {
   );
 };
 
-export default MenuScreen;
+export default NativeScreen;

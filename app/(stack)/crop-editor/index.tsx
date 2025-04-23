@@ -289,4 +289,3 @@ const CropEditorScreen = () => {
 };
 
 export default CropEditorScreen;
-
