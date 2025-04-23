@@ -8,7 +8,6 @@ import { Gesture, GestureDetector, GestureHandlerRootView, PanGestureHandler } f
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useAnimatedGestureHandler,
   withSpring,
 } from 'react-native-reanimated';
 import { styles } from '../menu';
@@ -37,78 +36,83 @@ const CropEditorScreen = () => {
   const scale = useSharedValue(1)
   const startScale = useSharedValue(0)
 
-  // Define all gesture handlers at the top level
-  // const topLeftGesture = useAnimatedGestureHandler({
-  //   onStart: (_, ctx: any) => {
-  //     ctx.startX = cropX.value;
-  //     ctx.startY = cropY.value;
-  //     ctx.startW = cropWidth.value;
-  //     ctx.startH = cropHeight.value;
-  //   },
-  //   onActive: (event, ctx: any) => {
-  //     cropX.value = withSpring(ctx.startX + event.translationX);
-  //     cropY.value = withSpring(ctx.startY + event.translationY);
-  //     cropWidth.value = withSpring(ctx.startW - event.translationX);
-  //     cropHeight.value = withSpring(ctx.startH - event.translationY);
-  //   },
-  // });
+  // Define all gesture handlers at the top level using the new Gesture API
   const topLeftGesture = useMemo(() => {
-    return Gesture.Pan().onStart((event) => {
-      console.log(event);
-    });
+    return Gesture.Pan()
+      .onStart((event) => {
+        const startX = cropX.value;
+        const startY = cropY.value;
+        const startW = cropWidth.value;
+        const startH = cropHeight.value;
+        return { startX, startY, startW, startH };
+      })
+      .onUpdate((event, ctx) => {
+        cropX.value = withSpring(ctx.startX + event.translationX);
+        cropY.value = withSpring(ctx.startY + event.translationY);
+        cropWidth.value = withSpring(ctx.startW - event.translationX);
+        cropHeight.value = withSpring(ctx.startH - event.translationY);
+      });
   }, []);
 
-  const topRightGesture = useAnimatedGestureHandler({
-    onStart: (_, ctx: any) => {
-      ctx.startX = cropX.value;
-      ctx.startY = cropY.value;
-      ctx.startW = cropWidth.value;
-      ctx.startH = cropHeight.value;
-    },
-    onActive: (event, ctx: any) => {
-      cropY.value = withSpring(ctx.startY + event.translationY);
-      cropWidth.value = withSpring(ctx.startW + event.translationX);
-      cropHeight.value = withSpring(ctx.startH - event.translationY);
-    },
-  });
+  const topRightGesture = useMemo(() => {
+    return Gesture.Pan()
+      .onStart((event) => {
+        const startX = cropX.value;
+        const startY = cropY.value;
+        const startW = cropWidth.value;
+        const startH = cropHeight.value;
+        return { startX, startY, startW, startH };
+      })
+      .onUpdate((event, ctx) => {
+        cropY.value = withSpring(ctx.startY + event.translationY);
+        cropWidth.value = withSpring(ctx.startW + event.translationX);
+        cropHeight.value = withSpring(ctx.startH - event.translationY);
+      });
+  }, []);
 
-  const bottomLeftGesture = useAnimatedGestureHandler({
-    onStart: (_, ctx: any) => {
-      ctx.startX = cropX.value;
-      ctx.startY = cropY.value;
-      ctx.startW = cropWidth.value;
-      ctx.startH = cropHeight.value;
-    },
-    onActive: (event, ctx: any) => {
-      cropX.value = withSpring(ctx.startX + event.translationX);
-      cropWidth.value = withSpring(ctx.startW - event.translationX);
-      cropHeight.value = withSpring(ctx.startH + event.translationY);
-    },
-  });
+  const bottomLeftGesture = useMemo(() => {
+    return Gesture.Pan()
+      .onStart((event) => {
+        const startX = cropX.value;
+        const startY = cropY.value;
+        const startW = cropWidth.value;
+        const startH = cropHeight.value;
+        return { startX, startY, startW, startH };
+      })
+      .onUpdate((event, ctx) => {
+        cropX.value = withSpring(ctx.startX + event.translationX);
+        cropWidth.value = withSpring(ctx.startW - event.translationX);
+        cropHeight.value = withSpring(ctx.startH + event.translationY);
+      });
+  }, []);
 
-  const bottomRightGesture = useAnimatedGestureHandler({
-    onStart: (_, ctx: any) => {
-      ctx.startX = cropX.value;
-      ctx.startY = cropY.value;
-      ctx.startW = cropWidth.value;
-      ctx.startH = cropHeight.value;
-    },
-    onActive: (event, ctx: any) => {
-      cropWidth.value = withSpring(ctx.startW + event.translationX);
-      cropHeight.value = withSpring(ctx.startH + event.translationY);
-    },
-  });
+  const bottomRightGesture = useMemo(() => {
+    return Gesture.Pan()
+      .onStart((event) => {
+        const startX = cropX.value;
+        const startY = cropY.value;
+        const startW = cropWidth.value;
+        const startH = cropHeight.value;
+        return { startX, startY, startW, startH };
+      })
+      .onUpdate((event, ctx) => {
+        cropWidth.value = withSpring(ctx.startW + event.translationX);
+        cropHeight.value = withSpring(ctx.startH + event.translationY);
+      });
+  }, []);
 
-  const moveRectGesture = useAnimatedGestureHandler({
-    onStart: (_, ctx: any) => {
-      ctx.startX = cropX.value;
-      ctx.startY = cropY.value;
-    },
-    onActive: (event, ctx: any) => {
-      cropX.value = withSpring(ctx.startX + event.translationX);
-      cropY.value = withSpring(ctx.startY + event.translationY);
-    },
-  });
+  const moveRectGesture = useMemo(() => {
+    return Gesture.Pan()
+      .onStart((event) => {
+        const startX = cropX.value;
+        const startY = cropY.value;
+        return { startX, startY };
+      })
+      .onUpdate((event, ctx) => {
+        cropX.value = withSpring(ctx.startX + event.translationX);
+        cropY.value = withSpring(ctx.startY + event.translationY);
+      });
+  }, []);
 
   const saveState = () => {
     setHistory((prev) => [
@@ -250,27 +254,27 @@ const CropEditorScreen = () => {
             <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode='contain' />
             <Animated.View style={cropStyle} />
 
-            <PanGestureHandler onGestureEvent={moveRectGesture}>
+            <GestureDetector gesture={moveRectGesture}>
               <Animated.View style={[cropStyle, { zIndex: 10 }]} />
-            </PanGestureHandler>
+            </GestureDetector>
 
             <GestureDetector gesture={topLeftGesture}>
               <Animated.View style={[handleStyle(cropX.value - 10, cropY.value - 10)]} />
             </GestureDetector>
 
-            <PanGestureHandler onGestureEvent={topRightGesture}>
+            <GestureDetector gesture={topRightGesture}>
               <Animated.View style={[handleStyle(cropX.value + cropWidth.value - 10, cropY.value - 10)]} />
-            </PanGestureHandler>
+            </GestureDetector>
 
-            <PanGestureHandler onGestureEvent={bottomLeftGesture}>
+            <GestureDetector gesture={bottomLeftGesture}>
               <Animated.View style={[handleStyle(cropX.value - 10, cropY.value + cropHeight.value - 10)]} />
-            </PanGestureHandler>
+            </GestureDetector>
 
-            <PanGestureHandler onGestureEvent={bottomRightGesture}>
+            <GestureDetector gesture={bottomRightGesture}>
               <Animated.View
                 style={[handleStyle(cropX.value + cropWidth.value - 10, cropY.value + cropHeight.value - 10)]}
               />
-            </PanGestureHandler>
+            </GestureDetector>
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }}>
               <Button title='Deshacer' onPress={undo} disabled={history.length === 0} />
