@@ -1,10 +1,10 @@
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Image, StyleSheet, TouchableOpacity, Text, Dimensions, Alert } from 'react-native';
-import { GestureHandlerRootView, PanGestureHandler, Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, runOnJS } from 'react-native-reanimated';
-import { Canvas, Path, useCanvasRef } from '@shopify/react-native-skia';
+import { View, Image, StyleSheet, TouchableOpacity, Text, Dimensions} from 'react-native';
+import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { runOnJS } from 'react-native-reanimated';
+import { useCanvasRef } from '@shopify/react-native-skia';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
