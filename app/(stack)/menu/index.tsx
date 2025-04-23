@@ -38,7 +38,7 @@ export default function CameraScreen() {
   const takePicture = async () => {
     if (!cameraRef.current) return;
 
-    const photo = await cameraRef.current.takePictureAsync();
+    const photo = await cameraRef.current.takePictureAsync({ skipProcessing: true });
     if (!photo?.width || !photo?.height) return;
 
     const scaleX = photo.width / cameraLayout.width;
@@ -47,11 +47,12 @@ export default function CameraScreen() {
     const frameLeft = (cameraLayout.width - FRAME_WIDTH) / 2;
     const frameTop = (cameraLayout.height - FRAME_HEIGHT) / 2;
 
+    // Aseguramos que los valores sean enteros válidos
     const cropRegion = {
-      originX: frameLeft * scaleX,
-      originY: frameTop * scaleY,
-      width: FRAME_WIDTH * scaleX,
-      height: FRAME_HEIGHT * scaleY,
+      originX: Math.round(frameLeft * scaleX),
+      originY: Math.round(frameTop * scaleY),
+      width: Math.round(FRAME_WIDTH * scaleX),
+      height: Math.round(FRAME_HEIGHT * scaleY),
     };
 
     const context = ImageManipulator.ImageManipulator.manipulate(photo.uri);
@@ -73,7 +74,7 @@ export default function CameraScreen() {
     /**
      * !NOTE: This save the photo in gallery
      * await MediaLibrary.saveToLibraryAsync(result.uri);
-    */
+     */
   };
 
   if (!permission) return <Text>Requesting camera permission...</Text>;
@@ -111,7 +112,10 @@ export default function CameraScreen() {
               resizeMode='contain'
             />
           )}
-          <TouchableOpacity onPress={() => croppedUri && navigation.navigate('crop-editor/index', { photoUri: croppedUri })} style={styles.closeButton}>
+          <TouchableOpacity
+            onPress={() => croppedUri && navigation.navigate('crop-editor/index', { photoUri: croppedUri })}
+            style={styles.closeButton}
+          >
             <Text style={{ color: '#fff' }}>Volver</Text>
           </TouchableOpacity>
         </View>
@@ -147,7 +151,7 @@ export const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: 'white',
     backgroundColor: 'transparent',
-  },  
+  },
   captureButton: {
     position: 'absolute',
     bottom: 40,

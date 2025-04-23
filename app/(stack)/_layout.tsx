@@ -18,6 +18,12 @@ const StackLayout = () => {
         }}
       />
       <Stack.Screen
+        name='menu/edit'
+        options={{
+          title: 'Edit',
+        }}
+      />
+      <Stack.Screen
         name='crop-editor/index'
         options={{
           title: 'Crop Editor',

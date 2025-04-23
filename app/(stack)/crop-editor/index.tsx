@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { View, Image, Button, StyleSheet, Dimensions, Text, Platform, ViewStyle } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { SaveFormat } from 'expo-image-manipulator';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as MediaLibrary from 'expo-media-library';
-import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -25,7 +26,6 @@ const CropEditorScreen = () => {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [history, setHistory] = useState<CropState[]>([]);
   const [redoStack, setRedoStack] = useState<CropState[]>([]);
-  const [mediaPermission, setMediaPermission] = useState(null);
   const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
   const cameraRef = useRef<CameraView>(null);
 
@@ -34,21 +34,29 @@ const CropEditorScreen = () => {
   const cropWidth = useSharedValue(200);
   const cropHeight = useSharedValue(200);
 
+  const scale = useSharedValue(1)
+  const startScale = useSharedValue(0)
+
   // Define all gesture handlers at the top level
-  const topLeftGesture = useAnimatedGestureHandler({
-    onStart: (_, ctx: any) => {
-      ctx.startX = cropX.value;
-      ctx.startY = cropY.value;
-      ctx.startW = cropWidth.value;
-      ctx.startH = cropHeight.value;
-    },
-    onActive: (event, ctx: any) => {
-      cropX.value = withSpring(ctx.startX + event.translationX);
-      cropY.value = withSpring(ctx.startY + event.translationY);
-      cropWidth.value = withSpring(ctx.startW - event.translationX);
-      cropHeight.value = withSpring(ctx.startH - event.translationY);
-    },
-  });
+  // const topLeftGesture = useAnimatedGestureHandler({
+  //   onStart: (_, ctx: any) => {
+  //     ctx.startX = cropX.value;
+  //     ctx.startY = cropY.value;
+  //     ctx.startW = cropWidth.value;
+  //     ctx.startH = cropHeight.value;
+  //   },
+  //   onActive: (event, ctx: any) => {
+  //     cropX.value = withSpring(ctx.startX + event.translationX);
+  //     cropY.value = withSpring(ctx.startY + event.translationY);
+  //     cropWidth.value = withSpring(ctx.startW - event.translationX);
+  //     cropHeight.value = withSpring(ctx.startH - event.translationY);
+  //   },
+  // });
+  const topLeftGesture = useMemo(() => {
+    return Gesture.Pan().onStart((event) => {
+      console.log(event);
+    });
+  }, []);
 
   const topRightGesture = useAnimatedGestureHandler({
     onStart: (_, ctx: any) => {
@@ -182,20 +190,22 @@ const CropEditorScreen = () => {
       height: cropHeight.value * scaleY,
     };
 
-    const result = await ImageManipulator.manipulateAsync(photoUri, [{ crop }], {
-      compress: 1,
-      format: ImageManipulator.SaveFormat.PNG,
+    const context = ImageManipulator.ImageManipulator.manipulate(photoUri);
+    context.crop(crop);
+    const img = await context.renderAsync();
+    const result = await img.saveAsync({
+      format: SaveFormat.JPEG,
     });
 
     setPhotoUri(result.uri);
   };
 
   const saveToGallery = async () => {
-    if (mediaPermission && photoUri) {
+    if (photoUri) {
       await MediaLibrary.saveToLibraryAsync(photoUri);
-      alert('Imagen guardada en la galería');
+      alert('Image saved');
     } else {
-      alert('No se tienen permisos para guardar en la galería');
+      alert('Not saved');
     }
   };
 
@@ -244,9 +254,9 @@ const CropEditorScreen = () => {
               <Animated.View style={[cropStyle, { zIndex: 10 }]} />
             </PanGestureHandler>
 
-            <PanGestureHandler onGestureEvent={topLeftGesture}>
+            <GestureDetector gesture={topLeftGesture}>
               <Animated.View style={[handleStyle(cropX.value - 10, cropY.value - 10)]} />
-            </PanGestureHandler>
+            </GestureDetector>
 
             <PanGestureHandler onGestureEvent={topRightGesture}>
               <Animated.View style={[handleStyle(cropX.value + cropWidth.value - 10, cropY.value - 10)]} />
@@ -279,3 +289,4 @@ const CropEditorScreen = () => {
 };
 
 export default CropEditorScreen;
+
