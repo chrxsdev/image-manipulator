@@ -14,8 +14,6 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SaveFormat } from 'expo-image-manipulator';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as MediaLibrary from 'expo-media-library';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -23,7 +21,6 @@ const FRAME_WIDTH = screenWidth * 0.8;
 const FRAME_HEIGHT = FRAME_WIDTH * 1.58; // Vertical proportion with width
 
 export default function CameraScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraLayout, setCameraLayout] = useState({ width: 0, height: 0 });
@@ -38,7 +35,7 @@ export default function CameraScreen() {
   const takePicture = async () => {
     if (!cameraRef.current) return;
 
-    const photo = await cameraRef.current.takePictureAsync({ skipProcessing: true });
+    const photo = await cameraRef.current.takePictureAsync();
     if (!photo?.width || !photo?.height) return;
 
     const scaleX = photo.width / cameraLayout.width;
@@ -62,13 +59,6 @@ export default function CameraScreen() {
       format: SaveFormat.JPEG,
     });
 
-    /*     
-     * manipulateAsync is deprecated
-      const cropped = await manipulateAsync(photo.uri, [{ crop: cropRegion }], {
-      compress: 1,
-      format: SaveFormat.JPEG,
-    }); */
-
     setCroppedUri(result.uri);
     setShowPreview(true);
     /**
@@ -86,7 +76,7 @@ export default function CameraScreen() {
       </View>
     );
   }
-
+  console.log(croppedUri);
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing='back' ref={cameraRef} onLayout={onCameraLayout}>
@@ -113,7 +103,7 @@ export default function CameraScreen() {
             />
           )}
           <TouchableOpacity
-            onPress={() => croppedUri && navigation.navigate('crop-editor/index', { photoUri: croppedUri })}
+            onPress={() => ({})}
             style={styles.closeButton}
           >
             <Text style={{ color: '#fff' }}>Volver</Text>
