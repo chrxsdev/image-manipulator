@@ -14,6 +14,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SaveFormat } from 'expo-image-manipulator';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as MediaLibrary from 'expo-media-library';
+import { Link, useNavigation } from 'expo-router';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ export default function CameraScreen() {
   const [cameraLayout, setCameraLayout] = useState({ width: 0, height: 0 });
   const [croppedUri, setCroppedUri] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const navigation = useNavigation<any>();
 
   const onCameraLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -103,7 +105,11 @@ export default function CameraScreen() {
             />
           )}
           <TouchableOpacity
-            onPress={() => ({})}
+            onPress={() =>
+              navigation.navigate('menu/edit', {
+                croppedUri,
+              })
+            }
             style={styles.closeButton}
           >
             <Text style={{ color: '#fff' }}>Volver</Text>
