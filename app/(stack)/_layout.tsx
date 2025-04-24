@@ -12,7 +12,7 @@ const StackLayout = () => {
       }}
     >
       <Stack.Screen
-        name='menu'
+        name='menu/index'
         options={{
           title: 'Menu',
         }}

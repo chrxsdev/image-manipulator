@@ -31,7 +31,6 @@ const EditScreen = () => {
   const [isMovingRect, setIsMovingRect] = useState(false);
 
   const imageRef = useRef(null);
-  const viewShotRef = useRef<any>(null);
 
   // Getting image dimensions
   useEffect(() => {
@@ -306,14 +305,6 @@ const EditScreen = () => {
           <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.instructions}>
-        <Text style={styles.instructionText}>
-          {drawMode
-            ? 'Tap and drag to draw black rectangle or tap on existing rectangle to move it'
-            : "Select 'Hide PII' to begin"}
-        </Text>
-      </View>
     </GestureHandlerRootView>
   );
 };
@@ -321,8 +312,8 @@ const EditScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0f0f',
-    justifyContent: 'space-between'
+    backgroundColor: 'white',
+    justifyContent: 'space-between',
   },
   header: {
     padding: 15,
@@ -369,19 +360,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-  },
-  instructions: {
-    padding: 16,
-    backgroundColor: '#1a1a1a',
-  },
-  instructionText: {
-    color: '#ccc',
-    textAlign: 'center',
-  },
-  rectangleCount: {
-    color: '#ccc',
-    textAlign: 'center',
-    marginTop: 8,
   },
 });
 

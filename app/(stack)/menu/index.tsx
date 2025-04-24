@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,11 +13,13 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SaveFormat } from 'expo-image-manipulator';
 import * as ImageManipulator from 'expo-image-manipulator';
-import * as MediaLibrary from 'expo-media-library';
-import { Link, useNavigation } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+/**
+ * Note: Calculated values
+ */
 const FRAME_WIDTH = screenWidth * 0.8;
 const FRAME_HEIGHT = FRAME_WIDTH * 1.58; // Vertical proportion with width
 
@@ -28,6 +30,15 @@ export default function CameraScreen() {
   const [croppedUri, setCroppedUri] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const navigation = useNavigation<any>();
+
+  // Reseting camera state when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // This reset the default values when the focus is the camera again
+      setShowPreview(false);
+      setCroppedUri(null);
+    }, [])
+  );
 
   const onCameraLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -46,7 +57,7 @@ export default function CameraScreen() {
     const frameLeft = (cameraLayout.width - FRAME_WIDTH) / 2;
     const frameTop = (cameraLayout.height - FRAME_HEIGHT) / 2;
 
-    // Aseguramos que los valores sean enteros válidos
+    // Valid integer values
     const cropRegion = {
       originX: Math.round(frameLeft * scaleX),
       originY: Math.round(frameTop * scaleY),
@@ -63,10 +74,17 @@ export default function CameraScreen() {
 
     setCroppedUri(result.uri);
     setShowPreview(true);
-    /**
-     * !NOTE: This save the photo in gallery
-     * await MediaLibrary.saveToLibraryAsync(result.uri);
-     */
+  };
+
+  const handleNavigateToEdit = () => {
+    navigation.navigate('menu/edit', {
+      croppedUri,
+    });
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    setCroppedUri(null);
   };
 
   if (!permission) return <Text>Requesting camera permission...</Text>;
@@ -78,7 +96,7 @@ export default function CameraScreen() {
       </View>
     );
   }
-  console.log(croppedUri);
+
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing='back' ref={cameraRef} onLayout={onCameraLayout}>
@@ -104,16 +122,14 @@ export default function CameraScreen() {
               resizeMode='contain'
             />
           )}
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('menu/edit', {
-                croppedUri,
-              })
-            }
-            style={styles.closeButton}
-          >
-            <Text style={{ color: '#fff' }}>Edit</Text>
-          </TouchableOpacity>
+          <View style={styles.previewButtonsContainer}>
+            <TouchableOpacity onPress={handleClosePreview} style={[styles.previewButton, styles.cancelButton]}>
+              <Text style={{ color: '#fff' }}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleNavigateToEdit} style={[styles.previewButton, styles.editButton]}>
+              <Text style={{ color: '#fff' }}>Edit</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -162,10 +178,22 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  closeButton: {
+  previewButtonsContainer: {
+    flexDirection: 'row',
     marginTop: 20,
-    backgroundColor: '#333',
+    justifyContent: 'center',
+    width: FRAME_WIDTH,
+  },
+  previewButton: {
     padding: 12,
     borderRadius: 8,
+    alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: '#007AFF',
+    marginLeft: 12
+  },
+  cancelButton: {
+    backgroundColor: 'red',
   },
 });
