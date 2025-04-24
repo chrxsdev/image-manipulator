@@ -1,6 +1,6 @@
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Image, StyleSheet, TouchableOpacity, Text, Dimensions, Alert } from 'react-native';
 import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
@@ -161,23 +161,27 @@ const EditScreen = () => {
     }
   };
 
-  // Replace useAnimatedGestureHandler with Gesture.Pan()
-  const panGesture = Gesture.Pan()
-    .onStart((event) => {
-      if (drawMode) {
-        runOnJS(startInteraction)(event.x, event.y);
-      }
-    })
-    .onUpdate((event) => {
-      if (drawMode) {
-        runOnJS(updateInteraction)(event.x, event.y);
-      }
-    })
-    .onEnd(() => {
-      if (drawMode) {
-        runOnJS(finishInteraction)();
-      }
-    });
+  // Gesture
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .onStart((event) => {
+          if (drawMode) {
+            runOnJS(startInteraction)(event.x, event.y);
+          }
+        })
+        .onUpdate((event) => {
+          if (drawMode) {
+            runOnJS(updateInteraction)(event.x, event.y);
+          }
+        })
+        .onEnd(() => {
+          if (drawMode) {
+            runOnJS(finishInteraction)();
+          }
+        }),
+    [drawMode, startInteraction, updateInteraction, finishInteraction]
+  );
 
   const toggleDrawMode = () => {
     setDrawMode(!drawMode);
@@ -204,14 +208,14 @@ const EditScreen = () => {
         quality: 1,
       });
 
-      const result = await MediaLibrary.saveToLibraryAsync(localUri);
+      const results = await MediaLibrary.createAssetAsync(localUri);
 
-      console.log('here->', result, localUri);
+      console.log(results);
 
       /**
        * !NOTE:
        * - How we will be sending the data to backend..???
-       * - Do we need another type of file response 
+       * - Do we need another type of file response
        */
       if (localUri) {
         Alert.alert('Success', 'Image saved to your gallery', [
@@ -227,7 +231,12 @@ const EditScreen = () => {
     }
   };
 
-  // Render all rectangles including the current one being drawn
+  /**
+   * Render all rectangles including the current one being drawn
+   * TODO:
+   * - Avoid allowing users to draw outside the image.
+   * - Enable capacity to resize rectangle created?
+   */
   const renderRectangles = () => {
     const allRects = [...rectangles];
     if (currentRect) {
@@ -252,7 +261,7 @@ const EditScreen = () => {
             top: rect.y,
             width: rect.width,
             height: rect.height,
-            borderColor: selectedRectIndex === index ? '#ffcc00' : '#ffffff',
+            borderColor: selectedRectIndex === index ? '#e8e8e8' : '#ffffff',
             borderWidth: selectedRectIndex === index ? 2 : 1,
           },
         ]}
@@ -276,7 +285,7 @@ const EditScreen = () => {
               resizeMode='contain'
             />
 
-            {/* Draw rectangles overlay */}
+            {/* Drawing rectangles overlay */}
             {renderRectangles()}
           </Animated.View>
         </GestureDetector>
@@ -284,7 +293,7 @@ const EditScreen = () => {
 
       <View style={styles.toolbar}>
         <TouchableOpacity style={[styles.button, drawMode ? styles.activeButton : null]} onPress={toggleDrawMode}>
-          <Text style={styles.buttonText}>{drawMode ? 'Back' : 'Hide PII'}</Text>
+          <Text style={styles.buttonText}>{drawMode ? 'Done' : 'Hide PII'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
