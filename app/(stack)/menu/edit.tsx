@@ -1,10 +1,12 @@
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Image, StyleSheet, TouchableOpacity, Text, Dimensions} from 'react-native';
+import { View, Image, StyleSheet, TouchableOpacity, Text, Dimensions, Alert } from 'react-native';
 import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
-import { useCanvasRef } from '@shopify/react-native-skia';
+import * as MediaLibrary from 'expo-media-library';
+
+import { captureRef } from 'react-native-view-shot';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,9 +31,9 @@ const EditScreen = () => {
   const [isMovingRect, setIsMovingRect] = useState(false);
 
   const imageRef = useRef(null);
-  const canvasRef = useCanvasRef();
+  const viewShotRef = useRef<any>(null);
 
-  // Get actual image dimensions for proper coordinate calculation
+  // Getting image dimensions
   useEffect(() => {
     if (imageUri) {
       Image.getSize(
@@ -51,6 +53,16 @@ const EditScreen = () => {
       );
     }
   }, [imageUri]);
+
+  // Request permissions for saving images
+  useEffect(() => {
+    (async () => {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Please grant media library permissions to save images');
+      }
+    })();
+  }, []);
 
   // Check if a point is inside a rectangle
   const isPointInRect = (x: number, y: number, rect: Rect): boolean => {
@@ -72,7 +84,7 @@ const EditScreen = () => {
 
     // First check if we're clicking on an existing rectangle
     const index = findSelectedRect(x, y);
-    
+
     if (index !== null) {
       // We're clicking on an existing rectangle, start moving it
       setSelectedRectIndex(index);
@@ -181,13 +193,38 @@ const EditScreen = () => {
   };
 
   const handleSaveImage = async () => {
-    // If no rectangles, return to camera
+    // TODO: Remove this if is required???
     if (rectangles.length === 0) {
-      navigation.navigate('menu/index');
       return;
     }
 
-    /// TODO: Code to save the image with the squares
+    try {
+      const localUri = await captureRef(imageRef, {
+        height: imageSize.height,
+        quality: 1,
+      });
+
+      const result = await MediaLibrary.saveToLibraryAsync(localUri);
+
+      console.log('here->', result, localUri);
+
+      /**
+       * !NOTE:
+       * - How we will be sending the data to backend..???
+       * - Do we need another type of file response 
+       */
+      if (localUri) {
+        Alert.alert('Success', 'Image saved to your gallery', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('menu/index'),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error saving image:', error);
+      Alert.alert('Error', 'Something failed trying to save the image...');
+    }
   };
 
   // Render all rectangles including the current one being drawn
@@ -231,7 +268,7 @@ const EditScreen = () => {
 
       <View style={styles.imageContainer}>
         <GestureDetector gesture={panGesture}>
-          <Animated.View style={styles.gestureContainer}>
+          <Animated.View ref={imageRef} collapsable={false} style={styles.gestureContainer}>
             <Image
               ref={imageRef}
               source={{ uri: imageUri }}
@@ -266,9 +303,7 @@ const EditScreen = () => {
       <View style={styles.instructions}>
         <Text style={styles.instructionText}>
           {drawMode
-            ? isMovingRect 
-              ? 'Moving rectangle...' 
-              : 'Tap and drag to draw black rectangle or tap on existing rectangle to move it'
+            ? 'Tap and drag to draw black rectangle or tap on existing rectangle to move it'
             : "Select 'Hide PII' to begin"}
         </Text>
       </View>
