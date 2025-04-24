@@ -261,8 +261,6 @@ const EditScreen = () => {
             top: rect.y,
             width: rect.width,
             height: rect.height,
-            borderColor: selectedRectIndex === index ? '#e8e8e8' : '#ffffff',
-            borderWidth: selectedRectIndex === index ? 2 : 1,
           },
         ]}
       />
@@ -324,10 +322,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0f0f0f',
+    justifyContent: 'space-between'
   },
   header: {
-    paddingTop: 40,
-    paddingBottom: 10,
+    padding: 15,
     backgroundColor: '#1a1a1a',
     alignItems: 'center',
   },
@@ -337,16 +335,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   imageContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0f0f0f',
   },
   gestureContainer: {
     position: 'relative',
   },
   image: {
-    flex: 1,
     resizeMode: 'contain',
   },
   rectangle: {
@@ -357,7 +352,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 16,
-    backgroundColor: '#1a1a1a',
   },
   button: {
     backgroundColor: '#444',
