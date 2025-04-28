@@ -24,12 +24,6 @@ const StackLayout = () => {
         }}
       />
       <Stack.Screen
-        name='crop-editor/index'
-        options={{
-          title: 'Crop Editor',
-        }}
-      />
-      <Stack.Screen
         name='native/index'
         options={{
           title: 'Native',
